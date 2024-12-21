@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('organization_number')->unique();
             $table->string('email');
             $table->string('phone');
+            $table->text('address');
             $table->enum('business_type', ['customer', 'supplier', 'internal']);
             $table->timestamps();
             $table->softDeletes();

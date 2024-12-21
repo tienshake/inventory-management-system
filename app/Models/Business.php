@@ -15,6 +15,7 @@ class Business extends Model
         'organization_number',
         'email',
         'phone',
+        'address',
         'business_type',
     ];
 

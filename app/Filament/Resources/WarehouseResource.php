@@ -43,10 +43,6 @@ class WarehouseResource extends Resource
                                     ->preload()
                                     ->label('Associated Business (Optional)')
                                     ->placeholder('Select a business'),
-
-
-
-
                             ])
                             ->columnSpan(1),
 
@@ -76,15 +72,16 @@ class WarehouseResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('address')
+                    ->searchable()
+                    ->wrap()
+                    ->limit(50),
+
                 Tables\Columns\TextColumn::make('business.company_name')
                     ->searchable()
                     ->sortable()
                     ->label('Associated Business'),
 
-                Tables\Columns\TextColumn::make('address')
-                    ->searchable()
-                    ->wrap()
-                    ->limit(50),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

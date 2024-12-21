@@ -35,10 +35,6 @@ return new class extends Migration
             $table->date('date_acquired')->nullable();
             $table->decimal('cost_price', 15, 2)->nullable();
 
-            // Leasing details
-            $table->date('lease_start')->nullable();
-            $table->date('lease_end')->nullable();
-
             $table->timestamps();
             $table->softDeletes();
         });

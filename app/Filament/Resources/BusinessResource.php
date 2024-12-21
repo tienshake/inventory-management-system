@@ -62,6 +62,11 @@ class BusinessResource extends Resource
                             ->default('customer')
                             ->required(),
 
+                        Forms\Components\TextInput::make('address')
+                            ->required()
+                            ->placeholder('Address')
+                            ->maxLength(255),
+
                         Forms\Components\Section::make('Business Locations')
                             ->schema([
                                 Forms\Components\Repeater::make('locations')

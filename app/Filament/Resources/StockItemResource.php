@@ -18,6 +18,7 @@ class StockItemResource extends Resource
     protected static ?string $model = StockItem::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
+    protected static ?string $navigationGroup = 'Items Management';
 
 
     public static function form(Form $form): Form
@@ -72,15 +73,17 @@ class StockItemResource extends Resource
                             ]),
 
                         // Right Column - Location & Leasing
-                        Forms\Components\Section::make('Location & Leasing Details')
+                        Forms\Components\Section::make('Location & Leasing')
                             ->schema([
                                 Forms\Components\Select::make('warehouse_id')
                                     ->relationship('warehouse', 'name')
                                     ->searchable()
+                                    ->required()
                                     ->preload(),
 
                                 Forms\Components\TextInput::make('storage_location')
                                     ->maxLength(255)
+                                    ->required()
                                     ->placeholder('e.g., Bay A, Shelf 3'),
 
                                 Forms\Components\Select::make('business_id')
@@ -105,12 +108,9 @@ class StockItemResource extends Resource
                                             ->toArray();
                                     })
                                     ->disabled(fn(callable $get) => !$get('business_id'))
-                                    ->required(fn(callable $get) => (bool) $get('business_id'))
+                                    // ->required(fn(callable $get) => (bool) $get('business_id'))
                                     ->searchable()
                                     ->preload(),
-
-                                Forms\Components\DatePicker::make('lease_start'),
-                                Forms\Components\DatePicker::make('lease_end')
                             ]),
                     ]),
             ]);
@@ -129,14 +129,16 @@ class StockItemResource extends Resource
                     ->sortable()
                     ->label('Product Type'),
 
-                Tables\Columns\SelectColumn::make('status')
-                    ->options([
-                        'in_warehouse' => 'In Warehouse',
-                        'on_downpayment' => 'On Downpayment',
-                        'on_lease' => 'On Lease',
-                        'sold' => 'Sold',
-                        'in_transit' => 'In Transit',
-                    ]),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'in_warehouse' => 'info',
+                        'on_downpayment' => 'warning',
+                        'on_lease' => 'success',
+                        'sold' => 'danger',
+                        'in_transit' => 'gray',
+                        default => 'gray',
+                    }),
 
                 Tables\Columns\TextColumn::make('warehouse.name')
                     ->searchable()
@@ -163,15 +165,6 @@ class StockItemResource extends Resource
                     ->date()
                     ->sortable()
                     ->toggleable(),
-
-                Tables\Columns\TextColumn::make('lease_start')
-                    ->date()
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('lease_end')
-                    ->date()
-                    ->toggleable(),
-
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')

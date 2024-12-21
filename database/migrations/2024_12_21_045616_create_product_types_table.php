@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('product_types', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('manufacturer');
             $table->string('model_sku');
-            $table->string('category');
-            $table->string('sub_category')->nullable();
+            $table->foreignId('manufacturer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('sub_category_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
