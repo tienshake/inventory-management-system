@@ -2,43 +2,34 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Business extends Model
 {
-    /** @use HasFactory<\Database\Factories\BusinessFactory> */
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
     protected $fillable = [
-        'name',
+        'company_name',
         'organization_number',
         'email',
         'phone',
-        'business_type'
+        'business_type',
     ];
 
-    public function locations()
+    public function locations(): HasMany
     {
-        return $this->hasMany(BusinessLocation::class);
+        return $this->hasMany(Location::class);
     }
 
-    public function warehouses()
+    public function warehouses(): HasMany
     {
         return $this->hasMany(Warehouse::class);
     }
 
-    public function items(): HasManyThrough
+    public function stockItems(): HasMany
     {
-        return $this->hasManyThrough(
-            Item::class,
-            BusinessLocation::class,
-            'business_id', // Foreign key on business_locations table
-            'business_location_id', // Foreign key on items table
-            'id', // Local key on businesses table
-            'id' // Local key on business_locations table
-        );
+        return $this->hasMany(StockItem::class);
     }
 }

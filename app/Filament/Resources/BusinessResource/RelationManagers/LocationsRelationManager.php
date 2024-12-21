@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\BusinessResource\RelationManagers;
 
 use Filament\Forms;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
@@ -18,20 +19,19 @@ class LocationsRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->label('Location name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Textarea::make('address')
-                    ->label('Address')
-                    ->required()
-                    ->maxLength(65535),
-                Forms\Components\TextInput::make('latitude')
-                    ->label('Latitude')
-                    ->numeric(),
-                Forms\Components\TextInput::make('longitude')
-                    ->label('Longitude')
-                    ->numeric()
+                Forms\Components\Section::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->required()
+                            ->maxLength(255),
+
+                        Hidden::make('latitude'),
+                        Hidden::make('longitude'),
+                        Hidden::make('address'),
+
+                        Forms\Components\View::make('forms.components.google-map')
+                            ->columnSpanFull(),
+                    ])
             ]);
     }
 
@@ -41,14 +41,12 @@ class LocationsRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Location name'),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('address')
-                    ->label('Address')
+                    ->searchable()
+                    ->sortable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('latitude')
-                    ->label('Latitude'),
-                Tables\Columns\TextColumn::make('longitude')
-                    ->label('Longitude'),
             ])
             ->filters([
                 //
@@ -57,11 +55,9 @@ class LocationsRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\DeleteAction::make(),
-                ]),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

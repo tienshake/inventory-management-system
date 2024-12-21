@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BusinessResource\Pages;
 use App\Filament\Resources\BusinessResource\RelationManagers;
+use App\Filament\Resources\BusinessResource\RelationManagers\LocationsRelationManager;
+use App\Filament\Resources\BusinessResource\RelationManagers\StockItemsRelationManager;
 use App\Models\Business;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -22,47 +24,74 @@ class BusinessResource extends Resource
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
-
     {
         return $form
             ->schema([
                 Forms\Components\Section::make()
                     ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Company Name')
+                        Forms\Components\TextInput::make('company_name')
                             ->required()
+                            ->placeholder('Company Name')
                             ->maxLength(255),
 
                         Forms\Components\TextInput::make('organization_number')
-                            ->label('Tax ID/Registration Number')
                             ->required()
+                            ->numeric()
+                            ->placeholder('123456-7890')
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
 
-                        Forms\Components\Select::make('business_type')
-                            ->label('Business Type')
-                            ->options([
-                                'customer' => 'Customer',
-                                'supplier' => 'Supplier',
-                                'internal' => 'Internal',
-                            ])
-                            ->required(),
-                    ])->columns(2),
-
-                // Contact Information
-                Forms\Components\Section::make('Contact Information')
-                    ->schema([
                         Forms\Components\TextInput::make('email')
-                            ->label('Email')
                             ->email()
                             ->required()
+                            ->placeholder('email@gmail')
                             ->maxLength(255),
 
                         Forms\Components\TextInput::make('phone')
-                            ->label('Phone Number')
                             ->tel()
                             ->required()
+                            ->placeholder('123-456-7890')
                             ->maxLength(255),
+
+                        Forms\Components\Select::make('business_type')
+                            ->options([
+                                'customer' => 'Customer',
+                                'supplier' => 'Supplier',
+                                'internal' => 'Internal Business Unit',
+                            ])
+                            ->default('customer')
+                            ->required(),
+
+                        Forms\Components\Section::make('Business Locations')
+                            ->schema([
+                                Forms\Components\Repeater::make('locations')
+                                    ->relationship()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->required()
+                                            ->label('Business Location Name')
+                                            ->placeholder('Branch name or location identifier'),
+
+                                        Forms\Components\Hidden::make('latitude'),
+                                        Forms\Components\Hidden::make('longitude'),
+                                        Forms\Components\TextInput::make('address')
+                                            ->required()
+                                            ->label('Address'),
+
+                                        Forms\Components\View::make('forms.components.google-map')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->columns(1)
+                                    ->collapsible()
+                                    ->collapsed(
+                                        fn($livewire) => !($livewire instanceof Pages\CreateBusiness)
+                                    )
+                                    ->itemLabel(
+                                        fn(array $state): ?string =>
+                                        $state['name'] ?? null
+                                    )
+                                    ->addActionLabel('Add New Location')
+                            ])
                     ])->columns(2)
             ]);
     }
@@ -71,54 +100,42 @@ class BusinessResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->label('Company Name')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('organization_number')
-                    ->label('Tax ID')
+                Tables\Columns\TextColumn::make('company_name')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('business_type')
-                    ->label('Business Type')
-                    ->badge()
-                    ->colors([
-                        'warning' => 'customer',
-                        'success' => 'supplier',
-                        'primary' => 'internal',
-                    ]),
+                Tables\Columns\TextColumn::make('organization_number')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('email')
-                    ->label('Email')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('phone')
-                    ->label('Phone'),
+                    ->searchable(),
 
-                Tables\Columns\TextColumn::make('locations_count')
-                    ->label('Locations')
-                    ->counts('locations'),
-
-                Tables\Columns\TextColumn::make('warehouses_count')
-                    ->label('Warehouses')
-                    ->counts('warehouses'),
-            ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('business_type')
-                    ->label('Business type')
+                Tables\Columns\SelectColumn::make('business_type')
                     ->options([
                         'customer' => 'Customer',
                         'supplier' => 'Supplier',
                         'internal' => 'Internal',
+                    ]),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('business_type')
+                    ->options([
+                        'customer' => 'Customer',
+                        'supplier' => 'Supplier',
+                        'internal' => 'Internal Business Unit',
                     ])
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\DeleteAction::make(),
-                ]),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -130,9 +147,8 @@ class BusinessResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\LocationsRelationManager::class,
-            RelationManagers\WarehousesRelationManager::class,
-            RelationManagers\ItemsRelationManager::class,
+            StockItemsRelationManager::class,
+            LocationsRelationManager::class,
         ];
     }
 

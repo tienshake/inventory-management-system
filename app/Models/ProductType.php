@@ -2,25 +2,38 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductType extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductTypeFactory> */
-    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
-        'manufacturer',
-        'model_number',
-        'category',
-        'subcategory'
+        'model_sku',
+        'manufacturer_id',
+        'category_id',
+        'sub_category_id'
     ];
 
-    public function items()
+    public function manufacturer(): BelongsTo
     {
-        return $this->hasMany(Item::class);
+        return $this->belongsTo(Manufacturer::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function subCategory(): BelongsTo
+    {
+        return $this->belongsTo(SubCategory::class);
+    }
+
+    public function stockItems(): HasMany
+    {
+        return $this->hasMany(StockItem::class);
     }
 }

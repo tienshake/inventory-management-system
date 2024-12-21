@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\BusinessResource\RelationManagers\StockItemsRelationManager;
 use App\Filament\Resources\WarehouseResource\Pages;
 use App\Filament\Resources\WarehouseResource\RelationManagers;
 use App\Models\Warehouse;
@@ -17,35 +18,53 @@ class WarehouseResource extends Resource
 {
     protected static ?string $model = Warehouse::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
+    protected static ?string $navigationGroup = 'General Management';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('business_id')
-                    ->relationship('business', 'name')
-                    ->label('Business')
-                    ->searchable()
-                    ->preload(),
+                Forms\Components\Grid::make(2)
+                    ->schema([
+                        // Left Column
+                        Forms\Components\Section::make('Warehouse Information')
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->label('Warehouse Name')
+                                    ->placeholder('Enter warehouse name'),
 
-                Forms\Components\TextInput::make('name')
-                    ->label('Location name')
-                    ->required()
-                    ->maxLength(255),
+                                Forms\Components\Select::make('business_id')
+                                    ->relationship('business', 'company_name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->label('Associated Business (Optional)')
+                                    ->placeholder('Select a business'),
 
-                Forms\Components\Textarea::make('address')
-                    ->label('Address')
-                    ->required()
-                    ->maxLength(65535),
 
-                Forms\Components\TextInput::make('latitude')
-                    ->label('Latitude')
-                    ->numeric(),
 
-                Forms\Components\TextInput::make('longitude')
-                    ->label('Longitude')
-                    ->numeric()
+
+                            ])
+                            ->columnSpan(1),
+
+                        // Right Column
+                        Forms\Components\Section::make('Location Details')
+                            ->schema([
+                                Forms\Components\Hidden::make('latitude'),
+                                Forms\Components\Hidden::make('longitude'),
+
+                                Forms\Components\TextInput::make('address')
+                                    ->required()
+                                    ->label('Address'),
+
+                                Forms\Components\View::make('forms.components.google-map')
+                                    ->columnSpanFull(),
+                            ])
+                            ->columnSpan(1),
+                    ]),
             ]);
     }
 
@@ -54,34 +73,35 @@ class WarehouseResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('business_id')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('latitude')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('longitude')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
+
+                Tables\Columns\TextColumn::make('business.company_name')
+                    ->searchable()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Associated Business'),
+
+                Tables\Columns\TextColumn::make('address')
+                    ->searchable()
+                    ->wrap()
+                    ->limit(50),
+
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('business_id')
+                    ->relationship('business', 'company_name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Filter by Business')
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -93,7 +113,7 @@ class WarehouseResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            StockItemsRelationManager::class,
         ];
     }
 
